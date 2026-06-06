@@ -1,11 +1,9 @@
 from fastapi import FastAPI, Request, HTTPException, Response,status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-import random
-import string
 
 from backend.models import LongUrl
-
+from backend.utility import get_datetime, create_short_code
 
 mem = {}
 app = FastAPI()
@@ -19,20 +17,17 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
-def create_short_code(length=7):
-    """Generate a random short code."""
-    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
-
 
 @app.post("/shrtn", status_code=status.HTTP_201_CREATED)
 async def create_url(originalurl: LongUrl):
     short_code = create_short_code()
+    creation_dt = get_datetime()
     mem[short_code] = {
         'id': str(len(mem)),
         'url': originalurl.url,
         "shortCode": short_code,
-        "createdAt": "2021-09-01T12:00:00Z",
-        "updatedAt": "2021-09-01T12:00:00Z",
+        "createdAt": creation_dt,
+        "updatedAt": creation_dt,
         'accessCount':0
     }
     return {k:v for k,v in mem[short_code].items() if k != "accessCount"}
@@ -50,7 +45,8 @@ async def get_url(short_code: str):
 async def update_original_url(short_code: str, originalurl: LongUrl):
     if short_code not in mem:
         raise HTTPException(404,"No url mapped to this short url")
-    mem[short_code]['url'] = originalurl.url    
+    mem[short_code]['updatedAt'] = get_datetime()
+    mem[short_code]['url'] = originalurl.url
     return {k:v for k,v in mem[short_code].items() if k != "accessCount"}
 
 
