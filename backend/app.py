@@ -7,10 +7,10 @@ from typing import Annotated
 from sqlalchemy import select, exists,delete
 from sqlalchemy.sql import func
 
-from backend.db import Base, engine, SessionLocal, get_db
+from backend.db import Base, engine, get_db
 from backend.model import urlmap
-from backend.validation_model import LongUrl
-from backend.utility import get_datetime, create_short_code
+from backend.validation_model import LongUrl, UrlMapResponse, UrlMapStats
+from backend.utility import create_short_code
 
 mem = {}
 app = FastAPI()
@@ -31,7 +31,7 @@ def mapping_exists(shortcode: str, db: Session):
     return db.execute(stmt).scalar()
 
 
-@app.post("/shrtn", status_code=status.HTTP_201_CREATED)
+@app.post("/shrtn", status_code=status.HTTP_201_CREATED, response_model=UrlMapResponse)
 async def create_url(originalurl: LongUrl,db: db_dependancy):
     
     while True:
@@ -47,7 +47,7 @@ async def create_url(originalurl: LongUrl,db: db_dependancy):
     return urlmapping
 
 
-@app.get('/shrtn/{short_code}')
+@app.get('/shrtn/{short_code}',response_model=UrlMapResponse)
 async def get_url(short_code: str, db: db_dependancy):
     if not mapping_exists(short_code, db):
         raise HTTPException(404,"No url mapped to this short url")
@@ -59,7 +59,7 @@ async def get_url(short_code: str, db: db_dependancy):
     return urlmapping
     
 
-@app.put('/shrtn/{short_code}')
+@app.put('/shrtn/{short_code}',response_model=UrlMapResponse)
 async def update_original_url(short_code: str, originalurl: LongUrl, db: db_dependancy):
     if not mapping_exists(short_code, db):
         raise HTTPException(404,"No url mapped to this short url")
@@ -84,7 +84,7 @@ async def delete_url(short_code: str,db:db_dependancy):
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@app.get('/shrtn/{short_code}/stats')
+@app.get('/shrtn/{short_code}/stats',response_model=UrlMapStats)
 async def get_url(short_code: str,db:db_dependancy):
     if not mapping_exists(short_code, db):
         raise HTTPException(404,"No url mapped to this short url")
