@@ -11,4 +11,4 @@ class urlmap(Base):
     shortcode = Column(String,nullable=False,unique=True,index=True)
     accessCount = Column(Integer,nullable=False,default=0)
     createdAt = Column(DateTime, nullable=False, default=func.now())
-    updatedAt = Column(DateTime, nullable=False, default=func.now(),onupdate=func.now())
+    updatedAt = Column(DateTime, nullable=False, default=func.now())

@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from typing import Annotated
 
 from sqlalchemy import select, exists,delete
+from sqlalchemy.sql import func
 
 from backend.db import Base, engine, SessionLocal, get_db
 from backend.model import urlmap
@@ -64,7 +65,8 @@ async def update_original_url(short_code: str, originalurl: LongUrl, db: db_depe
         raise HTTPException(404,"No url mapped to this short url")
     stmt = select(urlmap).where(urlmap.shortcode == short_code)
     urlmapping = db.execute(stmt).scalars().first()
-    urlmapping.url = originalurl.url    
+    urlmapping.url = originalurl.url
+    urlmapping.updatedAt = func.now() 
     db.commit()
     db.refresh(urlmapping)
     return urlmapping
