@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SHRTN — URL Shortener</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">SHR<span>TN</span></a>
+  <a href="index.html">Create</a>
+  <a href="edit.html">Edit</a>
+  <a href="delete.html">Delete</a>
+  <a href="analytics.html">Analytics</a>
+</nav>
+
+<main>
+  <div class="page-header">
+    <span class="tag">/ create</span>
+    <h1>Shorten a URL</h1>
+    <p>Paste any long URL and get a short link instantly.</p>
+  </div>
+
+  <div class="form-group">
+    <label for="url-input">Destination URL</label>
+    <input type="url" id="url-input" placeholder="https://example.com/very/long/url/here" />
+  </div>
+
+  <!-- <div class="form-group">
+    <label for="custom-code">Custom shortcode <span style="color:#444">(optional)</span></label>
+    <input type="text" id="custom-code" placeholder="e.g. my-link" />
+  </div> -->
+
+  <button class="btn btn-primary" id="shorten-btn">
+    <span id="btn-text">Shorten</span>
+  </button>
+
+  <div class="alert" id="alert"></div>
+
+  <div class="result-card" id="result-card">
+    <div class="result-label">Short URL</div>
+    <div class="result-url" id="result-url"></div>
+    <button class="copy-btn" id="copy-btn">Copy</button>
+    <div class="result-meta">
+      <span>Created: <span id="result-created">—</span></span>
+      <span>Code: <span id="result-code">—</span></span>
+    </div>
+  </div>
+</main>
+
+<footer>SHRTN &mdash; URL Shortener</footer>
+
+<script src="js/utils.js"></script>
+<script>
+  const btn     = document.getElementById("shorten-btn");
+  const btnText = document.getElementById("btn-text");
+  const alert   = document.getElementById("alert");
+  const card    = document.getElementById("result-card");
+  const copyBtn = document.getElementById("copy-btn");
+  let lastUrl   = "";
+
+  btn.addEventListener("click", async () => {
+    const url  = document.getElementById("url-input").value.trim();
+    // const code = document.getElementById("custom-code").value.trim();
+
+    if (!url) return showAlert(alert, "Please enter a URL.", "error");
+
+    hideAlert(alert);
+    hideResult(card);
+    btn.disabled = true;
+    btnText.innerHTML = '<span class="spinner"></span> Shortening...';
+
+    try {
+      const body = { url };
+
+      const res  = await fetch(`${API}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+
+      if (res.status === 201) {
+        const shortcode = data.shortcode;
+        lastUrl = `${FRONTEND_API}/${shortcode}`;
+        document.getElementById("result-url").textContent = lastUrl;
+        document.getElementById("result-code").textContent = shortcode;
+        document.getElementById("result-created").textContent =
+          new Date(data.createdAt).toLocaleString();
+        showResult(card);
+      } else {
+        showAlert(alert, data.detail || `Error ${res.status}`, "error");
+      }
+    } catch (e) {
+      showAlert(alert, "Could not reach the server. Is the backend running?", "error");
+    } finally {
+      btn.disabled = false;
+      btnText.textContent = "Shorten";
+    }
+  });
+
+  copyBtn.addEventListener("click", () => copyToClipboard(lastUrl, copyBtn));
+</script>
+</body>
+</html>

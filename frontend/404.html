@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Redirecting...</title>
+  <link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+<nav>
+  <a class="nav-logo" href="/index.html">SHR<span>TN</span></a>
+</nav>
+<main>
+  <div class="page-header">
+    <span class="tag">/ redirect</span>
+    <h1 id="status-heading">Redirecting...</h1>
+    <p id="status-msg">Looking up your short URL.</p>
+  </div>
+  <div class="alert" id="alert"></div>
+</main>
+<footer>SHRTN &mdash; URL Shortener</footer>
+<script src="js/utils.js"></script>
+<script>
+  async function redirect() {
+    // Extract shortcode from the path e.g. /1IlkyfU → "1IlkyfU"
+    const shortcode = location.pathname.replace(/^\//, "").trim();
+
+    if (!shortcode) {
+      window.location.href = "index.html";
+      return;
+    }
+
+    try {
+
+      const res  = await fetch(`${API}/${shortcode}`);
+      const data = await res.json();
+
+      if (res.ok) {
+        const dest = data.url;
+        if (dest) {
+          document.getElementById("status-msg").textContent = `Taking you to ${dest}`;
+          window.location.href = dest;
+        } else {
+          showError("Backend returned no URL for this shortcode.");
+        }
+      } else if (res.status === 404) {
+        showError(`"${shortcode}" doesn't exist or has been deleted.`);
+      } else {
+        showError(`Error ${res.status} — ${data.detail || "Something went wrong."}`);
+      }
+    } catch {
+      showError("Could not reach the server. Is the backend running?");
+    }
+  }
+
+  function showError(msg) {
+    document.getElementById("status-heading").textContent = "Not Found";
+    const alert = document.getElementById("alert");
+    alert.textContent = msg;
+    alert.className = "alert alert-error visible";
+    document.getElementById("status-msg").textContent = "This short URL could not be resolved.";
+
+    setTimeout(() => { window.location.href = "frontend/index.html"; }, 4000);
+  }
+
+  redirect();
+</script>
+</body>
+</html>
