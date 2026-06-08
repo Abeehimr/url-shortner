@@ -45,7 +45,6 @@ async def create_url(originalurl: LongUrl,db: db_dependancy):
     
     while True:
         short_code = create_short_code()
-        print(short_code,mapping_exists(short_code, db))
         if not mapping_exists(short_code, db):
             break
 

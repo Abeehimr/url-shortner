@@ -3,6 +3,7 @@ const fs   = require("fs");
 const path = require("path");
 
 const PORT = 5500;
+const API = process.env.API;
 const DIR  = __dirname;
 
 const MIME = {
