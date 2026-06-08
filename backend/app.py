@@ -1,6 +1,8 @@
 from fastapi import FastAPI, Request, HTTPException, Response,status, Depends
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+
 from sqlalchemy.orm import Session
 from typing import Annotated
 
@@ -14,6 +16,13 @@ from backend.utility import create_short_code
 
 mem = {}
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # tighten this in production
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 Base.metadata.create_all(bind=engine)
 
 
@@ -77,7 +86,6 @@ async def update_original_url(short_code: str, originalurl: LongUrl, db: db_depe
 async def delete_url(short_code: str,db:db_dependancy):
     if not mapping_exists(short_code, db):
         raise HTTPException(404,"No url mapped to this short url")
-    db.execute(stmt)
     stmt = delete(urlmap).where(urlmap.shortcode == short_code)
     db.execute(stmt)
     db.commit()
@@ -89,7 +97,7 @@ async def get_url(short_code: str,db:db_dependancy):
     if not mapping_exists(short_code, db):
         raise HTTPException(404,"No url mapped to this short url")
     stmt = select(urlmap).where(urlmap.shortcode == short_code)
-    urlmapping = db.execute(stmt).scalars().first()
+    urlmapping = db.execute(stmt).scalar()
     return urlmapping
 
 

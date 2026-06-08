@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Edit URL — SHRTN</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">SHR<span>TN</span></a>
+  <a href="index.html">Create</a>
+  <a href="edit.html">Edit</a>
+  <a href="delete.html">Delete</a>
+  <a href="analytics.html">Analytics</a>
+</nav>
+
+<main>
+  <div class="page-header">
+    <span class="tag">/ edit</span>
+    <h1>Edit a Link</h1>
+    <p>Look up a shortcode and update its destination URL.</p>
+  </div>
+
+  <!-- Step 1: Lookup -->
+  <div class="form-group">
+    <label for="lookup-code">Shortcode</label>
+    <input type="text" id="lookup-code" placeholder="e.g. my-link" />
+  </div>
+
+  <button class="btn btn-ghost" id="lookup-btn">
+    <span id="lookup-text">Look Up</span>
+  </button>
+
+  <div class="alert" id="lookup-alert"></div>
+
+  <!-- Step 2: Edit form (hidden until lookup succeeds) -->
+  <div id="edit-section" style="display:none">
+    <hr class="divider"/>
+
+    <div class="url-info-block">
+      <div class="info-label">Current destination</div>
+      <div class="info-value accent" id="current-url">—</div>
+    </div>
+
+    <div class="form-group" style="margin-top:1.5rem">
+      <label for="new-url">New destination URL</label>
+      <input type="url" id="new-url" placeholder="https://new-destination.com/path" />
+    </div>
+
+    <button class="btn btn-primary" id="update-btn">
+      <span id="update-text">Update URL</span>
+    </button>
+
+    <div class="alert" id="update-alert"></div>
+  </div>
+</main>
+
+<footer>SHRTN &mdash; URL Shortener</footer>
+
+<script src="js/utils.js"></script>
+<script>
+  const lookupBtn   = document.getElementById("lookup-btn");
+  const lookupText  = document.getElementById("lookup-text");
+  const lookupAlert = document.getElementById("lookup-alert");
+  const editSection = document.getElementById("edit-section");
+  const updateBtn   = document.getElementById("update-btn");
+  const updateText  = document.getElementById("update-text");
+  const updateAlert = document.getElementById("update-alert");
+  let activeCode    = "";
+
+  lookupBtn.addEventListener("click", async () => {
+    const code = document.getElementById("lookup-code").value.trim();
+    if (!code) return showAlert(lookupAlert, "Enter a shortcode.", "error");
+
+    hideAlert(lookupAlert);
+    editSection.style.display = "none";
+    lookupBtn.disabled = true;
+    lookupText.innerHTML = '<span class="spinner"></span>';
+
+    try {
+      const res  = await fetch(`${API}/${code}`);
+      const data = await res.json();
+
+      if (res.ok) {
+        activeCode = code;
+        document.getElementById("current-url").textContent = data.url || data.originalUrl || "—";
+        document.getElementById("new-url").value = "";
+        editSection.style.display = "block";
+        hideAlert(updateAlert);
+      } else {
+        showAlert(lookupAlert, data.detail || "Shortcode not found.", "error");
+      }
+    } catch {
+      showAlert(lookupAlert, "Could not reach the server.", "error");
+    } finally {
+      lookupBtn.disabled = false;
+      lookupText.textContent = "Look Up";
+    }
+  });
+
+  updateBtn.addEventListener("click", async () => {
+    const newUrl = document.getElementById("new-url").value.trim();
+    if (!newUrl) return showAlert(updateAlert, "Enter a new URL.", "error");
+
+    hideAlert(updateAlert);
+    updateBtn.disabled = true;
+    updateText.innerHTML = '<span class="spinner"></span> Updating...';
+
+    try {
+      const res  = await fetch(`${API}/${activeCode}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: newUrl }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        document.getElementById("current-url").textContent = newUrl;
+        showAlert(updateAlert, "URL updated successfully.", "success");
+      } else {
+        showAlert(updateAlert, data.detail || `Error ${res.status}`, "error");
+      }
+    } catch {
+      showAlert(updateAlert, "Could not reach the server.", "error");
+    } finally {
+      updateBtn.disabled = false;
+      updateText.textContent = "Update URL";
+    }
+  });
+</script>
+</body>
+</html>

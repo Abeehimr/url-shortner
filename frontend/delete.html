@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Delete URL — SHRTN</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">SHR<span>TN</span></a>
+  <a href="index.html">Create</a>
+  <a href="edit.html">Edit</a>
+  <a href="delete.html">Delete</a>
+  <a href="analytics.html">Analytics</a>
+</nav>
+
+<main>
+  <div class="page-header">
+    <span class="tag">/ delete</span>
+    <h1>Delete a Link</h1>
+    <p>Permanently remove a short URL. This action cannot be undone.</p>
+  </div>
+
+  <div class="form-group">
+    <label for="lookup-code">Shortcode</label>
+    <input type="text" id="lookup-code" placeholder="e.g. my-link" />
+  </div>
+
+  <button class="btn btn-ghost" id="lookup-btn">
+    <span id="lookup-text">Look Up</span>
+  </button>
+
+  <div class="alert" id="lookup-alert"></div>
+
+  <!-- Confirm section -->
+  <div id="confirm-section" style="display:none">
+    <hr class="divider"/>
+
+    <div class="url-info-block">
+      <div class="info-label">Shortcode</div>
+      <div class="info-value accent" id="confirm-code">—</div>
+    </div>
+
+    <div class="url-info-block">
+      <div class="info-label">Destination URL</div>
+      <div class="info-value" id="confirm-url">—</div>
+    </div>
+
+    <div class="danger-zone">
+      <h3>⚠ Danger Zone</h3>
+      <p>Deleting this short URL is permanent. Anyone with the short link will get a 404 after deletion.</p>
+      <button class="btn btn-danger" id="delete-btn">
+        <span id="delete-text">Yes, Delete It</span>
+      </button>
+    </div>
+
+    <div class="alert" id="delete-alert"></div>
+  </div>
+</main>
+
+<footer>SHRTN &mdash; URL Shortener</footer>
+
+<script src="js/utils.js"></script>
+<script>
+  const lookupBtn     = document.getElementById("lookup-btn");
+  const lookupText    = document.getElementById("lookup-text");
+  const lookupAlert   = document.getElementById("lookup-alert");
+  const confirmSection = document.getElementById("confirm-section");
+  const deleteBtn     = document.getElementById("delete-btn");
+  const deleteText    = document.getElementById("delete-text");
+  const deleteAlert   = document.getElementById("delete-alert");
+  let activeCode      = "";
+
+  lookupBtn.addEventListener("click", async () => {
+    const code = document.getElementById("lookup-code").value.trim();
+    if (!code) return showAlert(lookupAlert, "Enter a shortcode.", "error");
+
+    hideAlert(lookupAlert);
+    confirmSection.style.display = "none";
+    lookupBtn.disabled = true;
+    lookupText.innerHTML = '<span class="spinner"></span>';
+
+    try {
+      const res  = await fetch(`${API}/${code}`);
+      const data = await res.json();
+
+      if (res.ok) {
+        activeCode = code;
+        document.getElementById("confirm-code").textContent = code;
+        document.getElementById("confirm-url").textContent = data.url || data.originalUrl || "—";
+        confirmSection.style.display = "block";
+        deleteBtn.disabled = false;
+        deleteText.textContent = "Yes, Delete It";
+        hideAlert(deleteAlert);
+      } else {
+        showAlert(lookupAlert, data.detail || "Shortcode not found.", "error");
+      }
+    } catch {
+      showAlert(lookupAlert, "Could not reach the server.", "error");
+    } finally {
+      lookupBtn.disabled = false;
+      lookupText.textContent = "Look Up";
+    }
+  });
+
+  deleteBtn.addEventListener("click", async () => {
+    deleteBtn.disabled = true;
+    deleteText.innerHTML = '<span class="spinner"></span> Deleting...';
+    hideAlert(deleteAlert);
+
+    try {
+      const res = await fetch(`${API}/${activeCode}`, { method: "DELETE" });
+
+      if (res.ok || res.status === 204) {
+        showAlert(deleteAlert, `"${activeCode}" has been deleted.`, "success");
+        confirmSection.style.display = "none";
+        document.getElementById("lookup-code").value = "";
+      } else {
+        const data = await res.json().catch(() => ({}));
+        showAlert(deleteAlert, data.detail || `Error ${res.status}`, "error");
+        deleteBtn.disabled = false;
+        deleteText.textContent = "Yes, Delete It";
+      }
+    } catch {
+      showAlert(deleteAlert, "Could not reach the server.", "error");
+      deleteBtn.disabled = false;
+      deleteText.textContent = "Yes, Delete It";
+    }
+  });
+</script>
+</body>
+</html>
