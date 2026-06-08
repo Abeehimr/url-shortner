@@ -1,4 +1,4 @@
 const CONFIG = {
-  API: "https://your-app.up.railway.app",
-  FRONTEND: "https://your-app.vercel.app"
+  API: "https://url-shortener-backend.vercel.app",
+  FRONTEND: "https://url-shortener.vercel.app"
 };

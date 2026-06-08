@@ -1,0 +1,9 @@
+
+{
+  "rewrites": [
+    {
+      "source": "/((?!index|edit|delete|analytics|404|css|js).*)",
+      "destination": "/404.html"
+    }
+  ]
+}
