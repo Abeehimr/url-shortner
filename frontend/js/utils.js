@@ -1,5 +1,5 @@
-const API = "http://localhost:8000/shrtn";
-const FRONTEND_API = "http://localhost:5500";
+const API = CONFIG.API + "/shrtn";
+const FRONTEND_API = CONFIG.FRONTEND;
 function setActiveNav() {
   const path = location.pathname.split("/").pop() || "index.html";
   document.querySelectorAll("nav a").forEach(a => {
