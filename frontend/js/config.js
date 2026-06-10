@@ -1,4 +1,4 @@
 const CONFIG = {
-  API: "https://url-shortener-backend.vercel.app",
+  API: "https://shrtn-rho.vercel.app/",
   FRONTEND: "https://url-shortener.vercel.app"
 };
