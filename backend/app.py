@@ -15,11 +15,11 @@ from backend.validation_model import LongUrl, UrlMapResponse, UrlMapStats
 from backend.utility import create_short_code
 
 mem = {}
-app = FastAPI()
+app = FastAPI(docs_url=None, redoc_url=None)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://url-shortener.vercel.app"], 
+    allow_origins=["https://shrtn-url-shortner.vercel.app"], 
     allow_methods=["*"],
     allow_headers=["*"],
 )
